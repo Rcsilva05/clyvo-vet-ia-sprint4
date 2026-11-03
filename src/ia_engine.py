@@ -1,11 +1,20 @@
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any, Dict, List
 
 import requests
 
 from src.sample_data import EVENTS, PETS
+
+logger = logging.getLogger(__name__)
+
+DISCLAIMER = (
+    "Demonstração acadêmica com dados simulados. A pontuação não é diagnóstico "
+    "nem substitui avaliação veterinária. Não altere água ou tratamento do pet "
+    "com base nesta recomendação."
+)
 
 
 EVENT_WEIGHTS = {
@@ -96,7 +105,8 @@ def build_recommendation(pet: Dict[str, Any], events: List[Dict[str, Any]]) -> D
     elif level == "Alta":
         tutor_message = (
             f"{pet['name']} está com risco {level.lower()} e merece atenção nas próximas 24h. "
-            "Reduza o acesso a água em excesso e registe as próximas micções."
+            "Registre as próximas micções e o consumo de água, mantenha água disponível "
+            "e procure orientação veterinária."
         )
         clinic_message = (
             "Risco elevado por frequência anormal de micção e histórico relevante. "
@@ -129,6 +139,8 @@ def build_recommendation(pet: Dict[str, Any], events: List[Dict[str, Any]]) -> D
         "recommendation": action,
         "tutor_summary": tutor_message,
         "clinical_summary": clinic_message,
+        "data_source": "simulated",
+        "disclaimer": DISCLAIMER,
     }
 
 
@@ -153,19 +165,31 @@ def _build_llm_prompt(pet: Dict[str, Any], recommendation: Dict[str, Any]) -> st
         f"Condições: {', '.join(pet['conditions']) or 'nenhuma'}\n"
         f"Risco: {recommendation['risk_score']} / 100\n"
         f"Prioridade: {recommendation['priority']}\n"
-        "Escreva um resumo claro, empático e profissional para o tutor e outro para a clínica."
+        "Escreva um resumo claro, empático e profissional para o tutor e outro para a clínica. "
+        "Não faça diagnóstico, não recomende restringir água ou alterar tratamento, "
+        "e não invente sintomas, exames ou dados que não foram fornecidos."
     )
 
 
 def generate_llm_summary(pet: Dict[str, Any], recommendation: Dict[str, Any]) -> Dict[str, Any]:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
+        recommendation["llm_mode"] = "rules_only"
+        recommendation["llm_summary"] = (
+            "LLM não configurado. Os resumos exibidos foram gerados pelo motor local de regras."
+        )
         return recommendation
 
     payload = {
         "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         "messages": [
-            {"role": "system", "content": "Você é um assistente veterinário especialista em IA para saúde animal."},
+            {
+                "role": "system",
+                "content": (
+                    "Você redige resumos informativos para uma demonstração acadêmica de saúde animal. "
+                    "Não diagnostique, não recomende restringir água ou alterar tratamento e não invente dados."
+                ),
+            },
             {"role": "user", "content": _build_llm_prompt(pet, recommendation)},
         ],
         "temperature": 0.4,
@@ -183,12 +207,17 @@ def generate_llm_summary(pet: Dict[str, Any], recommendation: Dict[str, Any]) ->
         )
         response.raise_for_status()
         content = response.json()["choices"][0]["message"]["content"]
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError("Empty LLM response")
         recommendation["llm_summary"] = content.strip()
         recommendation["llm_mode"] = "openai"
         return recommendation
-    except Exception:
+    except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as exc:
+        logger.warning("LLM request failed; using local rules (%s)", type(exc).__name__)
         recommendation["llm_mode"] = "offline_fallback"
-        recommendation["llm_summary"] = "Resumo offline: IA local ativada; integração externa não configurada."
+        recommendation["llm_summary"] = (
+            "LLM indisponível. Os resumos exibidos foram mantidos pelo motor local de regras."
+        )
         return recommendation
 
 

@@ -228,11 +228,11 @@ Exemplo do corpo para `POST /api/recommendation`:
 
 ## Resultados de validação
 
-- Testes automatizados: `python -m pytest -q` — **2 testes passaram** no ambiente de desenvolvimento.
+- Testes automatizados: `python -m pytest -q` — **5 testes passaram** no ambiente de desenvolvimento.
 - API: `/health`, listagem de pets e geração de recomendação exercitadas localmente.
 - Interface: demonstração local confirma a exibição do pet selecionado e dos campos de recomendação.
 
-Os resultados demonstram o funcionamento do protótipo com dados artificiais; não representam validação clínica nem integração com dispositivos reais.
+Os resultados demonstram o funcionamento do protótipo com dados artificiais; não representam validação clínica nem integração com dispositivos reais. O motor local é a fonte dos scores e das ações; o LLM opcional apenas pode complementar os resumos e não deve diagnosticar, recomendar alteração de tratamento nem restringir água.
 
 ## Integrantes
 

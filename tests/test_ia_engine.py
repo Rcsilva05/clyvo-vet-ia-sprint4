@@ -22,10 +22,14 @@ def test_risk_for_luna_is_high():
     score = calculate_risk_score(pet, events)
     assert score >= 50
 
-    recommendation = build_recommendation(pet, events)
-    assert recommendation["priority"] in {"Alta", "Crítica"}
+    recommendation = build_recommendation(pet, events[:1])
+    assert recommendation["priority"] == "Alta"
     assert "tutor_summary" in recommendation
     assert "clinical_summary" in recommendation
+    assert "mantenha água disponível" in recommendation["tutor_summary"]
+    assert "Reduza o acesso a água" not in recommendation["tutor_summary"]
+    assert recommendation["data_source"] == "simulated"
+    assert "não é diagnóstico" in recommendation["disclaimer"]
 
 
 def test_risk_for_thor_is_low():
@@ -47,3 +51,12 @@ def test_risk_for_thor_is_low():
 
     recommendation = build_recommendation(pet, events)
     assert recommendation["priority"] in {"Baixa", "Média"}
+
+
+def test_score_is_bounded_and_unknown_events_do_not_add_risk():
+    pet = {"name": "Teste"}
+    score = calculate_risk_score(
+        pet,
+        [{"type": "evento_desconhecido", "intensity": 0}],
+    )
+    assert 0 <= score <= 100

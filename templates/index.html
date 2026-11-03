@@ -19,6 +19,7 @@
       .value { margin-top: 0.4rem; font-size: 1.6rem; font-weight: 700; }
       .section { margin-top: 1.5rem; }
       .summary { background: #f4f8ff; padding: 1rem; border-left: 4px solid #1a73e8; border-radius: 8px; }
+      .notice { margin: 1rem 0; padding: 1rem; background: #fff7e6; border-left: 4px solid #d99000; border-radius: 8px; }
       pre { white-space: pre-wrap; word-break: break-word; }
     </style>
   </head>
@@ -36,6 +37,11 @@
         <div class="toolbar">
           <select id="petSelect"></select>
           <button id="analyzeBtn">Gerar recomendação IA</button>
+        </div>
+
+        <div class="notice">
+          Demonstração acadêmica com dados simulados. O score não é diagnóstico e não substitui
+          avaliação veterinária. Não altere água ou tratamento com base nesta tela.
         </div>
 
         <div id="result" class="section">
@@ -85,9 +91,11 @@
             <p>${data.clinical_summary}</p>
           </div>
           <div class="section summary">
-            <h3>IA generativa</h3>
-            <pre>${(data.llm_summary || 'Resumo offline do motor de regras.').replace(/</g, '&lt;')}</pre>
+            <h3>Resumo inteligente</h3>
+            <p>Modo: ${data.llm_mode === 'openai' ? 'LLM externo' : 'motor local de regras'}</p>
+            <pre>${(data.llm_summary || 'Resumo produzido pelo motor local de regras.').replace(/</g, '&lt;')}</pre>
           </div>
+          <div class="section notice">${data.disclaimer}</div>
         `;
       }
 

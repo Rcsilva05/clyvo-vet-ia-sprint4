@@ -19,6 +19,8 @@ def api_pets():
 @app.post("/api/recommendation")
 def api_recommendation():
     payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return jsonify({"error": "request body must be a JSON object"}), 400
     pet_id = payload.get("petId")
     if not pet_id:
         return jsonify({"error": "petId is required"}), 400

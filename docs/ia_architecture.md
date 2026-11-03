@@ -47,6 +47,8 @@ A solução de IA do CLYVO Vet integra sensores do SOLIN com a aplicação de ge
 - depende de qualidade e consistência dos dados do sensor
 - sem histórico longitudinal grande, o modelo não substitui avaliação veterinária
 - o LLM é complementar ao motor de regras
+- neste protótipo, os pets e eventos são simulados; não há conexão real com MQTT, dispositivo ou banco de dados
+- o score é demonstrativo e não foi validado clinicamente; não deve orientar tratamento ou restrição de água
 
 ## Mapa de dados
 
